@@ -102,15 +102,6 @@
       margin: 0;
     }
 
-    .pill {
-      font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(255, 255, 255, .03);
-      color: var(--muted);
-    }
-
     .controls {
       display: flex;
       flex-wrap: wrap;
@@ -303,7 +294,7 @@
 
     /* Results header */
     .resultsHead {
-      position: sticky;
+      position: static;
       top: 12px;
       z-index: 10;
       background: rgba(11, 15, 20, .75);
@@ -495,11 +486,16 @@
     /* Quick Picks */
     .quickPicks {
       margin-top: 10px;
-      padding: 10px;
+      padding: 12px;
       border-radius: 16px;
-      border: 1px dashed rgba(255, 255, 255, .12);
-      background: rgba(255, 255, 255, .02);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(125, 211, 252, 0.22);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
       display: none;
+    }
+
+    .quickPicks .qpTitle span {
+      color: rgba(125, 211, 252, 0.95);
     }
 
     .qpTitle {
@@ -571,8 +567,6 @@
           Click your dropped emotions and instantly see craftable amulet anoints.
           <span class="kbd">Click</span>+1
           <span class="kbd">Right-click</span>−1
-          <span class="kbd">Shift+Click</span>set to 3
-          <span class="kbd">Cap</span>3
         </div>
       </div>
 
@@ -588,15 +582,10 @@
     <div class="sectionTitle">
       <div class="titleLeft">
         <div class="title">Distilled / Liquid Emotions</div>
-        <div class="pill">centered pane</div>
       </div>
       <div class="controls">
         <button id="resetBtn">Reset</button>
         <button id="fill3Btn" class="btnAccent" title="Testing only">All = 3</button>
-        <label class="tog" title="If enabled: click toggles 0↔3 (fastest). Right-click still decrements.">
-          <input id="jumpTo3" type="checkbox" />
-          0↔3
-        </label>
       </div>
     </div>
 
@@ -617,8 +606,7 @@
       <input id="search" class="search" type="text"
         placeholder="Filter by name/effect (e.g. move, aoe, damage, mana…)" />
       <select id="sort">
-        <option value="craftableFirst">Craftable first</option>
-        <option value="name">Name (A→Z)</option>
+        <option value="name">Name</option>
       </select>
       <label class="tog" title="Recommended for campaign speedruns.">
         <input id="craftableOnly" type="checkbox" checked />
@@ -649,7 +637,7 @@
       { key: "atk", label: "Atk Spd", re: /\b(attack speed|increased attack speed)\b/i },
       { key: "cast", label: "Cast", re: /\b(cast speed|increased cast speed)\b/i },
       { key: "mana", label: "Mana", re: /\b(mana|flask|recovery|regen|leech)\b/i },
-      { key: "def", label: "Defense", re: /\b(armour|evasion|block|ward|resist|suppression|damage taken|stun threshold)\b/i },
+      { key: "def", label: "Defense", re: /\b(armour|evasion|block|ward|resist|damage taken|energy shield|stun threshold)\b/i },
     ];
 
     const state = {
@@ -699,10 +687,9 @@
           badge, img, el("div", { class: "emoName" }, [emo])
         ]);
 
+
         tile.addEventListener("click", (ev) => {
-          const jump = document.getElementById("jumpTo3").checked;
           if (ev.shiftKey) setCount(emo, 3);
-          else if (jump) setCount(emo, state.counts[emo] > 0 ? 0 : 3);
           else inc(emo, +1);
           renderAll();
         });
@@ -835,7 +822,6 @@
       if (craftableOnly) rows = rows.filter(r => r._ok);
 
       if (sort === "name") rows.sort((a, b) => a.name.localeCompare(b.name));
-      if (sort === "craftableFirst") rows.sort((a, b) => (b._ok - a._ok) || a.name.localeCompare(b.name));
 
       const sum = document.getElementById("summary");
       sum.innerHTML = "";
@@ -923,7 +909,7 @@
     document.getElementById("search").addEventListener("input", renderResults);
     document.getElementById("sort").addEventListener("change", renderResults);
     document.getElementById("craftableOnly").addEventListener("change", renderResults);
-    document.getElementById("jumpTo3").addEventListener("change", renderTiles);
+    // document.getElementById("jumpTo3").addEventListener("change", renderTiles);
 
     document.addEventListener("contextmenu", (ev) => {
       if (ev.target.closest && ev.target.closest("#tiles")) ev.preventDefault();
