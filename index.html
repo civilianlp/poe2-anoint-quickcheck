@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PoE2 Anoint Quick-Check</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #0f1620;
+      --panel2: #0c131c;
+      --text: #e7edf5;
+      --muted: #9aa8b6;
+      --border: rgba(255, 255, 255, .08);
+      --border2: rgba(255, 255, 255, .14);
+      --chip: rgba(255, 255, 255, .06);
+      --accent: #7dd3fc;
+      --good: #86efac;
+      --bad: #fb7185;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 18px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 700px at 10% -10%, rgba(125, 211, 252, .10), transparent 60%),
+        radial-gradient(900px 500px at 110% 0%, rgba(134, 239, 172, .08), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      max-width: 1280px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .header {
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 20px;
+      letter-spacing: .2px;
+      margin: 0;
+      font-weight: 900;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+      line-height: 1.35;
+      max-width: 980px;
+    }
+
+    .kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid var(--border);
+      color: var(--text);
+      margin-right: 6px;
+      white-space: nowrap;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, .02), transparent 35%), var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .sectionTitle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .titleLeft {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .title {
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .25px;
+      margin: 0;
+    }
+
+    .pill {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, .03);
+      color: var(--muted);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    button {
+      background: rgba(255, 255, 255, .06);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 9px 10px;
+      font-weight: 850;
+      font-size: 12px;
+      cursor: pointer;
+      transition: transform .04s ease, background .12s ease, border-color .12s ease;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, .09);
+      border-color: var(--border2);
+    }
+
+    button:active {
+      transform: scale(.99);
+    }
+
+    .btnAccent {
+      border-color: rgba(125, 211, 252, .35);
+    }
+
+    .btnAccent:hover {
+      border-color: rgba(125, 211, 252, .55);
+    }
+
+    .tog {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .03);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .tog input {
+      accent-color: var(--accent);
+    }
+
+    /* Emotion tiles */
+    .tilesWrap {
+      display: flex;
+      justify-content: center;
+    }
+
+    .tilesGrid {
+      width: min(980px, 100%);
+      display: grid;
+      grid-template-columns: repeat(10, minmax(80px, 1fr));
+      gap: 10px;
+    }
+
+    @media (max-width: 980px) {
+      .tilesGrid {
+        grid-template-columns: repeat(5, minmax(90px, 1fr));
+      }
+    }
+
+    @media (max-width: 520px) {
+      .tilesGrid {
+        grid-template-columns: repeat(3, minmax(90px, 1fr));
+      }
+    }
+
+    .tile {
+      position: relative;
+      background: linear-gradient(180deg, rgba(255, 255, 255, .03), transparent 45%), var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 10px 10px 12px;
+      min-height: 110px;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      transition: transform .04s ease, border-color .12s ease, background .12s ease;
+    }
+
+    .tile:hover {
+      border-color: var(--border2);
+    }
+
+    .tile:active {
+      transform: scale(.99);
+    }
+
+    .emoIcon {
+      width: 54px;
+      height: 54px;
+      object-fit: contain;
+      filter: drop-shadow(0 6px 12px rgba(0, 0, 0, .35));
+      opacity: .98;
+    }
+
+    .emoName {
+      font-weight: 950;
+      font-size: 11px;
+      letter-spacing: .25px;
+      color: var(--text);
+      text-align: center;
+    }
+
+    .badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 950;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, .04);
+      color: var(--muted);
+    }
+
+    .badge.on {
+      background: rgba(125, 211, 252, .14);
+      border-color: rgba(125, 211, 252, .35);
+      color: var(--text);
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .status.ok {
+      color: var(--good);
+    }
+
+    .status.bad {
+      color: var(--bad);
+    }
+
+    /* Presets */
+    .presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 10px;
+      justify-content: center;
+    }
+
+    .presetBtn {
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 900;
+      background: rgba(255, 255, 255, .05);
+    }
+
+    .presetBtn.active {
+      border-color: rgba(125, 211, 252, .55);
+      background: rgba(125, 211, 252, .14);
+    }
+
+    .presetHint {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    /* Results header */
+    .resultsHead {
+      position: sticky;
+      top: 12px;
+      z-index: 10;
+      background: rgba(11, 15, 20, .75);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 10px;
+      box-shadow: var(--shadow);
+      margin: 14px 0 10px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .search {
+      flex: 1;
+      min-width: 260px;
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      color: var(--text);
+      outline: none;
+      font-weight: 750;
+      font-size: 12px;
+    }
+
+    .search::placeholder {
+      color: rgba(154, 168, 182, .7);
+    }
+
+    select {
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-weight: 850;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .summary {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .2);
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    /* Results grid */
+    .gridResults {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    @media (max-width: 1100px) {
+      .gridResults {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      .gridResults {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .result {
+      background: linear-gradient(180deg, rgba(255, 255, 255, .02), transparent 30%), var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cardTop {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-height: 38px;
+    }
+
+    .passiveIcon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, .10);
+      background: rgba(255, 255, 255, .04);
+      object-fit: contain;
+      flex: 0 0 auto;
+    }
+
+    .cardTitleWrap {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .result h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 950;
+      letter-spacing: .2px;
+      line-height: 1.15;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .miniMeta {
+      font-size: 11px;
+      color: rgba(154, 168, 182, .85);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .effect {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .chips {
+      margin-top: auto;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--chip);
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: .2px;
+      white-space: nowrap;
+    }
+
+    .emoMini {
+      width: 16px;
+      height: 16px;
+      object-fit: contain;
+      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .35));
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 12px;
+      padding: 14px 6px;
+    }
+
+    /* Quick Picks */
+    .quickPicks {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 16px;
+      border: 1px dashed rgba(255, 255, 255, .12);
+      background: rgba(255, 255, 255, .02);
+      display: none;
+    }
+
+    .qpTitle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .qpTitle span {
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: .25px;
+    }
+
+    .qpTitle .muted {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .credit {
+      text-align: right;
+      padding: 8px 10px;
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(255, 255, 255, .03);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .20);
+      min-width: 140px;
+    }
+
+    .creditLine {
+      font-size: 12px;
+      color: rgba(154, 168, 182, .95);
+      font-weight: 800;
+    }
+
+    .creditName {
+      color: #e7edf5;
+      font-weight: 950;
+      letter-spacing: .2px;
+    }
+
+    .creditLink {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 12px;
+      font-weight: 850;
+      color: rgba(125, 211, 252, .95);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(125, 211, 252, .35);
+    }
+
+    .creditLink:hover {
+      border-bottom-color: rgba(125, 211, 252, .75);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start;">
+      <div>
+        <h1>PoE2 Anoint Quick-Check</h1>
+        <div class="sub">
+          Click your dropped emotions and instantly see craftable amulet anoints.
+          <span class="kbd">Click</span>+1
+          <span class="kbd">Right-click</span>−1
+          <span class="kbd">Shift+Click</span>set to 3
+          <span class="kbd">Cap</span>3
+        </div>
+      </div>
+
+      <div class="credit">
+        <div class="creditLine">By: <span class="creditName">CivilianLP</span></div>
+        <a class="creditLink" href="TBD" target="_blank" rel="noopener">GITHUB</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP: Emotion Selection Pane -->
+  <div class="card">
+    <div class="sectionTitle">
+      <div class="titleLeft">
+        <div class="title">Distilled / Liquid Emotions</div>
+        <div class="pill">centered pane</div>
+      </div>
+      <div class="controls">
+        <button id="resetBtn">Reset</button>
+        <button id="fill3Btn" class="btnAccent" title="Testing only">All = 3</button>
+        <label class="tog" title="If enabled: click toggles 0↔3 (fastest). Right-click still decrements.">
+          <input id="jumpTo3" type="checkbox" />
+          0↔3
+        </label>
+      </div>
+    </div>
+
+    <div class="tilesWrap">
+      <div id="tiles" class="tilesGrid"></div>
+    </div>
+
+    <div class="presets" id="presets"></div>
+    <div class="presetHint" id="presetHint">Preset filters are regex-based on name/effect. Click one to surface “Quick
+      Picks”.</div>
+
+    <div id="status" class="status"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="resultsHead">
+    <div class="row">
+      <input id="search" class="search" type="text"
+        placeholder="Filter by name/effect (e.g. move, aoe, damage, mana…)" />
+      <select id="sort">
+        <option value="craftableFirst">Craftable first</option>
+        <option value="name">Name (A→Z)</option>
+      </select>
+      <label class="tog" title="Recommended for campaign speedruns.">
+        <input id="craftableOnly" type="checkbox" checked />
+        Craftable only
+      </label>
+    </div>
+    <div id="summary" class="summary"></div>
+
+    <div class="quickPicks" id="quickPicks">
+      <div class="qpTitle">
+        <span>Quick Picks</span>
+        <div class="muted" id="qpMeta"></div>
+      </div>
+      <div id="qpGrid" class="gridResults"></div>
+    </div>
+  </div>
+
+  <div id="resultsGrid" class="gridResults"></div>
+
+  <script>
+    const EMOTIONS = ["Ire", "Guilt", "Greed", "Paranoia", "Envy", "Disgust", "Despair", "Fear", "Suffering", "Isolation"];
+    const CAP = 3;
+
+    const PRESETS = [
+      { key: "move", label: "Move", re: /\b(move|movement|ms)\b/i },
+      { key: "aoe", label: "AoE", re: /\b(area|aoe|radius)\b/i },
+      { key: "dmg", label: "Damage", re: /\b(damage|dps|more|increased.*damage|attack damage|spell damage|projectile damage)\b/i },
+      { key: "atk", label: "Atk Spd", re: /\b(attack speed|increased attack speed)\b/i },
+      { key: "cast", label: "Cast", re: /\b(cast speed|increased cast speed)\b/i },
+      { key: "mana", label: "Mana", re: /\b(mana|flask|recovery|regen|leech)\b/i },
+      { key: "def", label: "Defense", re: /\b(armour|evasion|block|ward|resist|suppression|damage taken|stun threshold)\b/i },
+    ];
+
+    const state = {
+      counts: Object.fromEntries(EMOTIONS.map(e => [e, 0])),
+      anoints: [],
+      loaded: false,
+      activePresetKey: null,
+    };
+
+    function el(tag, attrs = {}, children = []) {
+      const n = document.createElement(tag);
+      for (const [k, v] of Object.entries(attrs)) {
+        if (k === "class") n.className = v;
+        else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2), v);
+        else n.setAttribute(k, v);
+      }
+      for (const c of children) n.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+      return n;
+    }
+
+    function setCount(emo, val) { state.counts[emo] = Math.max(0, Math.min(CAP, val)); }
+    function inc(emo, d) { setCount(emo, (state.counts[emo] || 0) + d); }
+
+    function renderStatus(msg, kind = "") {
+      const s = document.getElementById("status");
+      s.textContent = msg;
+      s.className = "status " + (kind === "ok" ? "ok" : (kind === "bad" ? "bad" : ""));
+    }
+
+    function renderTiles() {
+      const root = document.getElementById("tiles");
+      root.innerHTML = "";
+
+      for (const emo of EMOTIONS) {
+        const count = state.counts[emo] || 0;
+
+        const badge = el("div", { class: "badge " + (count > 0 ? "on" : "") }, [String(count)]);
+        const img = el("img", {
+          class: "emoIcon",
+          src: `./img/${emo}.png`,
+          alt: emo,
+          loading: "lazy",
+          onerror: (e) => { e.target.style.display = "none"; }
+        });
+
+        const tile = el("div", { class: "tile", role: "button", tabindex: "0" }, [
+          badge, img, el("div", { class: "emoName" }, [emo])
+        ]);
+
+        tile.addEventListener("click", (ev) => {
+          const jump = document.getElementById("jumpTo3").checked;
+          if (ev.shiftKey) setCount(emo, 3);
+          else if (jump) setCount(emo, state.counts[emo] > 0 ? 0 : 3);
+          else inc(emo, +1);
+          renderAll();
+        });
+
+        tile.addEventListener("contextmenu", (ev) => {
+          ev.preventDefault();
+          inc(emo, -1);
+          renderAll();
+        });
+
+        tile.addEventListener("keydown", (ev) => {
+          if (ev.key === "Enter" || ev.key === " ") {
+            ev.preventDefault();
+            inc(emo, +1);
+            renderAll();
+          }
+        });
+
+        root.appendChild(tile);
+      }
+    }
+
+    function needCounts(recipe) {
+      const need = {};
+      for (const r of recipe) need[r] = (need[r] || 0) + 1;
+      return need;
+    }
+
+    function totalMissing(recipe, counts) {
+      const need = needCounts(recipe);
+      let miss = 0;
+      for (const [emo, n] of Object.entries(need)) miss += Math.max(0, n - (counts[emo] || 0));
+      return miss;
+    }
+
+    function matchText(a, q) {
+      if (!q) return true;
+      const hay = `${a.name} ${a.effect || ""} ${(a.recipe || []).join(" ")}`.toLowerCase();
+      return hay.includes(q.toLowerCase());
+    }
+
+    function matchPreset(a) {
+      if (!state.activePresetKey) return true;
+      const preset = PRESETS.find(p => p.key === state.activePresetKey);
+      if (!preset) return true;
+      const hay = `${a.name} ${a.effect || ""}`;
+      return preset.re.test(hay);
+    }
+
+    function recipeChips(recipe) {
+      return el("div", { class: "chips" }, recipe.map(x => {
+        const img = el("img", {
+          class: "emoMini",
+          src: `./img/${x}.png`,
+          alt: x,
+          loading: "lazy",
+          onerror: (e) => { e.target.style.display = "none"; }
+        });
+        return el("span", { class: "chip mono" }, [img, x]);
+      }));
+    }
+
+    function renderPresets() {
+      const root = document.getElementById("presets");
+      root.innerHTML = "";
+
+      for (const p of PRESETS) {
+        const btn = el("button", { class: "presetBtn" + (state.activePresetKey === p.key ? " active" : "") }, [p.label]);
+        btn.addEventListener("click", () => {
+          state.activePresetKey = (state.activePresetKey === p.key) ? null : p.key;
+          renderPresets();
+          renderResults();
+        });
+        root.appendChild(btn);
+      }
+
+      const hint = document.getElementById("presetHint");
+      if (!state.activePresetKey) {
+        hint.textContent = "Preset filters are regex-based on name/effect. Click one to surface “Quick Picks”.";
+      } else {
+        const p = PRESETS.find(x => x.key === state.activePresetKey);
+        hint.textContent = `Active preset: ${p?.label || ""} (regex). Quick Picks will show matches at the top.`;
+      }
+    }
+
+    function renderCard(a) {
+      const top = el("div", { class: "cardTop" }, []);
+
+      if (a.passive_icon) {
+        top.appendChild(el("img", {
+          class: "passiveIcon",
+          src: `./${a.passive_icon}`,
+          alt: "",
+          loading: "lazy",
+          onerror: (e) => { e.target.style.display = "none"; }
+        }));
+      } else {
+        // Placeholder spacing if no icon
+        top.appendChild(el("div", { style: "width:34px;height:34px;" }, []));
+      }
+
+      const meta = a.notable_url ? a.notable_url.replace("https://", "") : "";
+      top.appendChild(el("div", { class: "cardTitleWrap" }, [
+        el("h3", {}, [a.name]),
+        el("div", { class: "miniMeta" }, [meta])
+      ]));
+
+      return el("div", { class: "result" }, [
+        top,
+        el("div", { class: "effect" }, [a.effect || "(no effect text)"]),
+        recipeChips(a.recipe)
+      ]);
+    }
+
+    function renderResults() {
+      const q = document.getElementById("search").value.trim();
+      const craftableOnly = document.getElementById("craftableOnly").checked;
+      const sort = document.getElementById("sort").value;
+
+      let rows = state.anoints
+        .filter(a => Array.isArray(a.recipe) && a.recipe.length === 3)
+        .filter(a => matchText(a, q))
+        .map(a => {
+          const miss = totalMissing(a.recipe, state.counts);
+          return { ...a, _missing: miss, _ok: miss === 0 };
+        });
+
+      const presetRows = rows.filter(a => matchPreset(a));
+
+      if (craftableOnly) rows = rows.filter(r => r._ok);
+
+      if (sort === "name") rows.sort((a, b) => a.name.localeCompare(b.name));
+      if (sort === "craftableFirst") rows.sort((a, b) => (b._ok - a._ok) || a.name.localeCompare(b.name));
+
+      const sum = document.getElementById("summary");
+      sum.innerHTML = "";
+      sum.appendChild(el("div", {}, [
+        el("span", { class: "dot" }, []), `${state.anoints.length} loaded`,
+        "  ",
+        el("span", { class: "dot" }, []), `${rows.length} showing`,
+        "  ",
+        el("span", { class: "dot" }, []), `cap ${CAP}`,
+        state.activePresetKey ? `  •  preset: ${PRESETS.find(p => p.key === state.activePresetKey)?.label || ""}` : ""
+      ]));
+
+      const qp = document.getElementById("quickPicks");
+      const qpGrid = document.getElementById("qpGrid");
+      const qpMeta = document.getElementById("qpMeta");
+      qpGrid.innerHTML = "";
+
+      if (state.activePresetKey) {
+        const qpRows = (craftableOnly ? presetRows.filter(r => r._ok) : presetRows)
+          .sort((a, b) => (b._ok - a._ok) || a.name.localeCompare(b.name))
+          .slice(0, 12);
+
+        qp.style.display = "block";
+        qpMeta.textContent = qpRows.length ? `${qpRows.length} matches` : "no matches";
+
+        if (!qpRows.length) {
+          qpGrid.appendChild(el("div", { class: "empty" }, ["No quick picks match your preset + filters."]));
+        } else {
+          for (const a of qpRows) qpGrid.appendChild(renderCard(a));
+        }
+      } else {
+        qp.style.display = "none";
+      }
+
+      const root = document.getElementById("resultsGrid");
+      root.innerHTML = "";
+      if (!rows.length) {
+        root.appendChild(el("div", { class: "empty" }, [
+          craftableOnly ? "No craftable anoints with your current drops." : "No matches."
+        ]));
+        return;
+      }
+
+      for (const a of rows) root.appendChild(renderCard(a));
+    }
+
+    function renderAll() {
+      renderTiles();
+      renderResults();
+    }
+
+    async function loadData() {
+      try {
+        renderStatus("Loading anoints.json …");
+        const res = await fetch("./anoints.json", { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error("anoints.json must be a JSON array");
+        state.anoints = data.map(x => ({
+          name: String(x.name ?? ""),
+          effect: x.effect ? String(x.effect) : "",
+          recipe: Array.isArray(x.recipe) ? x.recipe.map(String) : [],
+          notable_url: x.notable_url ? String(x.notable_url) : "",
+          passive_icon: x.passive_icon ? String(x.passive_icon) : "",
+        })).filter(x => x.name && x.recipe.length === 3);
+        state.loaded = true;
+        renderStatus(`Loaded ${state.anoints.length} anoints.`, "ok");
+      } catch (e) {
+        state.loaded = false;
+        state.anoints = [];
+        renderStatus(`Failed to load anoints.json: ${e.message}`, "bad");
+      } finally {
+        renderAll();
+      }
+    }
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      for (const emo of EMOTIONS) state.counts[emo] = 0;
+      renderAll();
+    });
+    document.getElementById("fill3Btn").addEventListener("click", () => {
+      for (const emo of EMOTIONS) state.counts[emo] = 3;
+      renderAll();
+    });
+    document.getElementById("search").addEventListener("input", renderResults);
+    document.getElementById("sort").addEventListener("change", renderResults);
+    document.getElementById("craftableOnly").addEventListener("change", renderResults);
+    document.getElementById("jumpTo3").addEventListener("change", renderTiles);
+
+    document.addEventListener("contextmenu", (ev) => {
+      if (ev.target.closest && ev.target.closest("#tiles")) ev.preventDefault();
+    });
+
+    renderPresets();
+    loadData();
+  </script>
+</body>
+
+</html>
