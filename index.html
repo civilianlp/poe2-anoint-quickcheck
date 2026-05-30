@@ -172,9 +172,9 @@
     }
 
     .tilesGrid {
-      width: min(980px, 100%);
+      width: min(1100px, 100%);
       display: grid;
-      grid-template-columns: repeat(10, minmax(80px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
       gap: 10px;
     }
 
@@ -544,6 +544,39 @@
       min-width: 140px;
     }
 
+    .headerMeta {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .patchBadge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      padding: 8px 10px;
+      border: 1px solid rgba(185, 28, 28, .42);
+      border-radius: 14px;
+      background: rgba(69, 10, 10, .22);
+      color: rgba(254, 226, 226, .92);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .16);
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .2px;
+      white-space: nowrap;
+      text-decoration: none;
+      transition: border-color .12s ease, background .12s ease, color .12s ease;
+    }
+
+    .patchBadge:hover {
+      border-color: rgba(248, 113, 113, .62);
+      background: rgba(69, 10, 10, .34);
+      color: #fee2e2;
+    }
+
     .creditLine {
       font-size: 12px;
       color: rgba(154, 168, 182, .95);
@@ -634,10 +667,14 @@
         </div>
       </div>
 
-      <div class="credit">
-        <div class="creditLine">By: <span class="creditName">CivilianLP</span></div>
-        <a class="creditLink" href="https://github.com/civilianlp/poe2-anoint-quickcheck" target="_blank"
-          rel="noopener">Github</a>
+      <div class="headerMeta">
+        <a class="patchBadge" href="https://www.pathofexile.com/forum/view-thread/3935437" target="_blank"
+          rel="noopener">Updated for: 0.5.0b</a>
+        <div class="credit">
+          <div class="creditLine">By: <span class="creditName">CivilianLP</span></div>
+          <a class="creditLink" href="https://github.com/civilianlp/poe2-anoint-quickcheck" target="_blank"
+            rel="noopener">Github</a>
+        </div>
       </div>
     </div>
   </div>
@@ -693,8 +730,16 @@
   <div id="resultsGrid" class="gridResults"></div>
 
   <script>
-    const EMOTIONS = ["Ire", "Guilt", "Greed", "Paranoia", "Envy", "Disgust", "Despair", "Fear", "Suffering", "Isolation"];
+    const BASE_EMOTIONS = ["Ire", "Guilt", "Greed", "Paranoia", "Envy", "Disgust", "Despair", "Fear", "Suffering", "Isolation"];
+    const POTENT_EMOTIONS = ["Melancholy", "Ferocity", "Contempt"];
+    const EMOTIONS = [...BASE_EMOTIONS, ...POTENT_EMOTIONS];
+    const REFORGE_ORDER = BASE_EMOTIONS;
     const CAP = 99;
+    const EMOTION_ICON_EXT = {
+      Melancholy: "webp",
+      Ferocity: "webp",
+      Contempt: "webp",
+    };
 
     const PRESETS = [
       { key: "move", label: "Move", re: /\b(move|movement|ms)\b/i },
@@ -726,12 +771,16 @@
 
     function setCount(emo, val) { state.counts[emo] = Math.max(0, Math.min(CAP, val)); }
     function inc(emo, d) { setCount(emo, (state.counts[emo] || 0) + d); }
+    function emotionIconSrc(emo) { return `./img/${emo}.${EMOTION_ICON_EXT[emo] || "png"}`; }
+    function localAssetSrc(path) {
+      return "./" + String(path).replaceAll("\\", "/").split("/").map(encodeURIComponent).join("/");
+    }
 
     function reforgeSummary(counts) {
       const parts = [];
       let totalUps = 0;
-      for (let i = 0; i < ORDER.length - 1; i++) {
-        const e = ORDER[i];
+      for (let i = 0; i < REFORGE_ORDER.length - 1; i++) {
+        const e = REFORGE_ORDER[i];
         const ups = Math.floor((counts[e] || 0) / 3);
         if (ups > 0) {
           totalUps += ups;
@@ -778,12 +827,12 @@
         const effective = eff[emo] || 0;
 
         // highlight if this tier can reforge upward (raw has at least one 3:1)
-        const canReforgeUp = raw >= 3;
+        const canReforgeUp = REFORGE_ORDER.includes(emo) && raw >= 3;
 
         const badge = el("div", { class: "badge " + (raw > 0 ? "on" : "") }, [String(raw)]);
         const img = el("img", {
           class: "emoIcon",
-          src: `./img/${emo}.png`,
+          src: emotionIconSrc(emo),
           alt: emo,
           loading: "lazy",
           onerror: (e) => { e.target.style.display = "none"; }
@@ -849,8 +898,7 @@
       const need = needCounts(recipe);
       const have = Object.fromEntries(ORDER.map(e => [e, invCounts[e] || 0]));
 
-      for (let i = 0; i < ORDER.length; i++) {
-        const emo = ORDER[i];
+      for (const emo of ORDER) {
 
         // spend what we can at this tier to satisfy required
         const use = Math.min(have[emo], need[emo]);
@@ -862,11 +910,13 @@
           return { ok: false, missing, remaining: have };
         }
 
-        // convert leftover up to next tier
-        if (i < ORDER.length - 1) {
+        const reforgeIdx = REFORGE_ORDER.indexOf(emo);
+
+        // convert leftover up to next tier for the base emotion ladder only
+        if (reforgeIdx >= 0 && reforgeIdx < REFORGE_ORDER.length - 1) {
           const up = Math.floor(have[emo] / 3);
           have[emo] = have[emo] % 3;
-          have[ORDER[i + 1]] += up;
+          have[REFORGE_ORDER[reforgeIdx + 1]] += up;
         }
       }
 
@@ -883,11 +933,11 @@
 
     function effectiveCounts(counts) {
       const have = Object.fromEntries(ORDER.map(e => [e, counts[e] || 0]));
-      for (let i = 0; i < ORDER.length - 1; i++) {
-        const emo = ORDER[i];
+      for (let i = 0; i < REFORGE_ORDER.length - 1; i++) {
+        const emo = REFORGE_ORDER[i];
         const up = Math.floor(have[emo] / 3);
         have[emo] = have[emo] % 3;
-        have[ORDER[i + 1]] += up;
+        have[REFORGE_ORDER[i + 1]] += up;
       }
       return have;
     }
@@ -915,7 +965,7 @@
       return el("div", { class: "chips" }, recipe.map(x => {
         const img = el("img", {
           class: "emoMini",
-          src: `./img/${x}.png`,
+          src: emotionIconSrc(x),
           alt: x,
           loading: "lazy",
           onerror: (e) => { e.target.style.display = "none"; }
@@ -954,7 +1004,7 @@
       if (a.passive_icon) {
         top.appendChild(el("img", {
           class: "passiveIcon",
-          src: `./${a.passive_icon}`,
+          src: localAssetSrc(a.passive_icon),
           alt: "",
           loading: "lazy",
           onerror: (e) => { e.target.style.display = "none"; }
